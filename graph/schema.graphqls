@@ -1,16 +1,16 @@
-type Message {
+type Listing {
   id: ID!
-  text: String
+  title: String
 }
 
-type MessagesConnection {
-  edges: [MessagesEdge!]!
+type LisitngsConnection {
+  edges: [ListingsEdge!]!
   pageInfo: PageInfo!
 }
 
-type MessagesEdge {
+type ListingsEdge {
   cursor: ID!
-  node: Message
+  node: Listing
 }
 
 type PageInfo {
@@ -19,12 +19,12 @@ type PageInfo {
   hasNextPage: Boolean
 }
 
-type ChatRoom {
+type Srp {
   id: ID!
   name: String
-  messagesConnection(first: Int = 20, after: ID): MessagesConnection
+  lisitngsConnection(first: Int = 20, after: ID): LisitngsConnection
 }
 
 type Query {
-  chatRoom(id: ID!): ChatRoom!
+  getSrp(id: ID!): Srp!
 }

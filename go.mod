@@ -1,15 +1,17 @@
 module github.com/kabece/gqlgen-chatroom
 
-go 1.17
+go 1.20
 
 require (
-	github.com/99designs/gqlgen v0.14.0
-	github.com/vektah/gqlparser/v2 v2.2.0
+	github.com/99designs/gqlgen v0.17.40
+	github.com/vektah/gqlparser/v2 v2.5.10
 )
 
 require (
-	github.com/agnivade/levenshtein v1.1.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/hashicorp/golang-lru v0.5.0 // indirect
-	github.com/mitchellh/mapstructure v0.0.0-20180203102830-a4e142e9c047 // indirect
+	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.3 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/sosodev/duration v1.1.0 // indirect
 )

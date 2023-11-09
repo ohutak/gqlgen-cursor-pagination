@@ -11,37 +11,37 @@ import (
 )
 
 type Resolver struct {
-	ChatRooms  map[string]model.ChatRoom
-	Messages map[string][]model.Message
+	Srps  map[string]model.Srp
+	Listings map[string][]model.Listing
 }
 
 func NewResolver() generated.Config {
-	const nChatRooms = 20
-	const nMessagesPerChatRoom = 100
+	const nSrps = 20
+	const nListingsPerSrp = 100
 	r := Resolver{}
-	r.ChatRooms = make(map[string]model.ChatRoom, nChatRooms)
-	r.Messages = make(map[string][]model.Message, nChatRooms)
+	r.Srps = make(map[string]model.Srp, nSrps)
+	r.Listings = make(map[string][]model.Listing, nSrps)
 
 	rand.Seed(time.Now().UnixNano())
-	for i := 0; i < nChatRooms; i++ {
+	for i := 0; i < nSrps; i++ {
 		id := strconv.Itoa(i + 1)
-		mockChatRoom := model.ChatRoom{
+		mockChatRoom := model.Srp{
 			ID: id,
-			Name: fmt.Sprintf("ChatRoom %s", id),
+			Name: fmt.Sprintf("Srp Page %s", id),
 		}
-		r.ChatRooms[id] = mockChatRoom
-		r.Messages[id] = make([]model.Message, nMessagesPerChatRoom)
+		r.Srps[id] = mockChatRoom
+		r.Listings[id] = make([]model.Listing, nListingsPerSrp)
 
 		// Generate messages for the ChatRoom
-		for k := 0; k < nMessagesPerChatRoom; k++ {
-			text := fmt.Sprintf("Message %d", k + 1)
+		for k := 0; k < nListingsPerSrp; k++ {
+			text := fmt.Sprintf("Listing %d", k + 1)
 
-			mockMessage := model.Message{
+			mockMessage := model.Listing{
 				ID: strconv.Itoa(k + 1),
-				Text: &text,
+				Title: &text,
 			}
 
-			r.Messages[id][k] = mockMessage
+			r.Listings[id][k] = mockMessage
 		}
 	}
 

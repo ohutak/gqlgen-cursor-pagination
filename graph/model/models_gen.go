@@ -2,23 +2,23 @@
 
 package model
 
-type Message struct {
-	ID   string  `json:"id"`
-	Text *string `json:"text"`
-}
-
-type MessagesConnection struct {
-	Edges    []*MessagesEdge `json:"edges"`
+type LisitngsConnection struct {
+	Edges    []*ListingsEdge `json:"edges"`
 	PageInfo *PageInfo       `json:"pageInfo"`
 }
 
-type MessagesEdge struct {
+type Listing struct {
+	ID    string  `json:"id"`
+	Title *string `json:"title,omitempty"`
+}
+
+type ListingsEdge struct {
 	Cursor string   `json:"cursor"`
-	Node   *Message `json:"node"`
+	Node   *Listing `json:"node,omitempty"`
 }
 
 type PageInfo struct {
 	StartCursor string `json:"startCursor"`
 	EndCursor   string `json:"endCursor"`
-	HasNextPage *bool  `json:"hasNextPage"`
+	HasNextPage *bool  `json:"hasNextPage,omitempty"`
 }

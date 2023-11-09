@@ -1,6 +1,6 @@
 package model
 
-type ChatRoom struct {
+type Srp struct {
 	ID string
 	Name string
 }
