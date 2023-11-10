@@ -39,7 +39,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Query() QueryResolver
-	Srp() SrpResolver
+	SearchResultListings() SearchResultListingsResolver
 }
 
 type DirectiveRoot struct {
@@ -68,21 +68,22 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetSrp func(childComplexity int, id string) int
+		GetSearchResultListings func(childComplexity int, id string, filters *string, sort *string) int
 	}
 
-	Srp struct {
+	SearchResultListings struct {
+		Filters            func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		LisitngsConnection func(childComplexity int, first *int, after *string) int
-		Name               func(childComplexity int) int
+		Sort               func(childComplexity int) int
 	}
 }
 
 type QueryResolver interface {
-	GetSrp(ctx context.Context, id string) (*model.Srp, error)
+	GetSearchResultListings(ctx context.Context, id string, filters *string, sort *string) (*model.SearchResultListings, error)
 }
-type SrpResolver interface {
-	LisitngsConnection(ctx context.Context, obj *model.Srp, first *int, after *string) (*model.LisitngsConnection, error)
+type SearchResultListingsResolver interface {
+	LisitngsConnection(ctx context.Context, obj *model.SearchResultListings, first *int, after *string) (*model.LisitngsConnection, error)
 }
 
 type executableSchema struct {
@@ -167,43 +168,50 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PageInfo.StartCursor(childComplexity), true
 
-	case "Query.getSrp":
-		if e.complexity.Query.GetSrp == nil {
+	case "Query.getSearchResultListings":
+		if e.complexity.Query.GetSearchResultListings == nil {
 			break
 		}
 
-		args, err := ec.field_Query_getSrp_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_getSearchResultListings_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.GetSrp(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.GetSearchResultListings(childComplexity, args["id"].(string), args["filters"].(*string), args["sort"].(*string)), true
 
-	case "Srp.id":
-		if e.complexity.Srp.ID == nil {
+	case "SearchResultListings.filters":
+		if e.complexity.SearchResultListings.Filters == nil {
 			break
 		}
 
-		return e.complexity.Srp.ID(childComplexity), true
+		return e.complexity.SearchResultListings.Filters(childComplexity), true
 
-	case "Srp.lisitngsConnection":
-		if e.complexity.Srp.LisitngsConnection == nil {
+	case "SearchResultListings.id":
+		if e.complexity.SearchResultListings.ID == nil {
 			break
 		}
 
-		args, err := ec.field_Srp_lisitngsConnection_args(context.TODO(), rawArgs)
+		return e.complexity.SearchResultListings.ID(childComplexity), true
+
+	case "SearchResultListings.lisitngsConnection":
+		if e.complexity.SearchResultListings.LisitngsConnection == nil {
+			break
+		}
+
+		args, err := ec.field_SearchResultListings_lisitngsConnection_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Srp.LisitngsConnection(childComplexity, args["first"].(*int), args["after"].(*string)), true
+		return e.complexity.SearchResultListings.LisitngsConnection(childComplexity, args["first"].(*int), args["after"].(*string)), true
 
-	case "Srp.name":
-		if e.complexity.Srp.Name == nil {
+	case "SearchResultListings.sort":
+		if e.complexity.SearchResultListings.Sort == nil {
 			break
 		}
 
-		return e.complexity.Srp.Name(childComplexity), true
+		return e.complexity.SearchResultListings.Sort(childComplexity), true
 
 	}
 	return 0, false
@@ -315,14 +323,15 @@ type PageInfo {
   hasNextPage: Boolean
 }
 
-type Srp {
+type SearchResultListings {
   id: ID!
-  name: String
+  filters: String!
+  sort: String!
   lisitngsConnection(first: Int = 20, after: ID): LisitngsConnection
 }
 
 type Query {
-  getSrp(id: ID!): Srp!
+  getSearchResultListings(id: ID!, filters: String, sort: String): SearchResultListings!
 }
 `, BuiltIn: false},
 }
@@ -347,7 +356,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_getSrp_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_getSearchResultListings_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -359,10 +368,28 @@ func (ec *executionContext) field_Query_getSrp_args(ctx context.Context, rawArgs
 		}
 	}
 	args["id"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["filters"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filters"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg2
 	return args, nil
 }
 
-func (ec *executionContext) field_Srp_lisitngsConnection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_SearchResultListings_lisitngsConnection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *int
@@ -831,8 +858,8 @@ func (ec *executionContext) fieldContext_PageInfo_hasNextPage(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_getSrp(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getSrp(ctx, field)
+func (ec *executionContext) _Query_getSearchResultListings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getSearchResultListings(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -845,7 +872,7 @@ func (ec *executionContext) _Query_getSrp(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetSrp(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Query().GetSearchResultListings(rctx, fc.Args["id"].(string), fc.Args["filters"].(*string), fc.Args["sort"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -857,12 +884,12 @@ func (ec *executionContext) _Query_getSrp(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Srp)
+	res := resTmp.(*model.SearchResultListings)
 	fc.Result = res
-	return ec.marshalNSrp2ᚖgithubᚗcomᚋkabeceᚋgqlgenᚑchatroomᚋgraphᚋmodelᚐSrp(ctx, field.Selections, res)
+	return ec.marshalNSearchResultListings2ᚖgithubᚗcomᚋkabeceᚋgqlgenᚑchatroomᚋgraphᚋmodelᚐSearchResultListings(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_getSrp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getSearchResultListings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -871,13 +898,15 @@ func (ec *executionContext) fieldContext_Query_getSrp(ctx context.Context, field
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Srp_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Srp_name(ctx, field)
+				return ec.fieldContext_SearchResultListings_id(ctx, field)
+			case "filters":
+				return ec.fieldContext_SearchResultListings_filters(ctx, field)
+			case "sort":
+				return ec.fieldContext_SearchResultListings_sort(ctx, field)
 			case "lisitngsConnection":
-				return ec.fieldContext_Srp_lisitngsConnection(ctx, field)
+				return ec.fieldContext_SearchResultListings_lisitngsConnection(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Srp", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SearchResultListings", field.Name)
 		},
 	}
 	defer func() {
@@ -887,7 +916,7 @@ func (ec *executionContext) fieldContext_Query_getSrp(ctx context.Context, field
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getSrp_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_getSearchResultListings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1023,8 +1052,8 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Srp_id(ctx context.Context, field graphql.CollectedField, obj *model.Srp) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Srp_id(ctx, field)
+func (ec *executionContext) _SearchResultListings_id(ctx context.Context, field graphql.CollectedField, obj *model.SearchResultListings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchResultListings_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1054,9 +1083,9 @@ func (ec *executionContext) _Srp_id(ctx context.Context, field graphql.Collected
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Srp_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchResultListings_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Srp",
+		Object:     "SearchResultListings",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1067,8 +1096,8 @@ func (ec *executionContext) fieldContext_Srp_id(ctx context.Context, field graph
 	return fc, nil
 }
 
-func (ec *executionContext) _Srp_name(ctx context.Context, field graphql.CollectedField, obj *model.Srp) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Srp_name(ctx, field)
+func (ec *executionContext) _SearchResultListings_filters(ctx context.Context, field graphql.CollectedField, obj *model.SearchResultListings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchResultListings_filters(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1081,23 +1110,26 @@ func (ec *executionContext) _Srp_name(ctx context.Context, field graphql.Collect
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
+		return obj.Filters, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Srp_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchResultListings_filters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Srp",
+		Object:     "SearchResultListings",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1108,8 +1140,8 @@ func (ec *executionContext) fieldContext_Srp_name(ctx context.Context, field gra
 	return fc, nil
 }
 
-func (ec *executionContext) _Srp_lisitngsConnection(ctx context.Context, field graphql.CollectedField, obj *model.Srp) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Srp_lisitngsConnection(ctx, field)
+func (ec *executionContext) _SearchResultListings_sort(ctx context.Context, field graphql.CollectedField, obj *model.SearchResultListings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchResultListings_sort(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1122,7 +1154,51 @@ func (ec *executionContext) _Srp_lisitngsConnection(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Srp().LisitngsConnection(rctx, obj, fc.Args["first"].(*int), fc.Args["after"].(*string))
+		return obj.Sort, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchResultListings_sort(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchResultListings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchResultListings_lisitngsConnection(ctx context.Context, field graphql.CollectedField, obj *model.SearchResultListings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchResultListings_lisitngsConnection(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.SearchResultListings().LisitngsConnection(rctx, obj, fc.Args["first"].(*int), fc.Args["after"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1136,9 +1212,9 @@ func (ec *executionContext) _Srp_lisitngsConnection(ctx context.Context, field g
 	return ec.marshalOLisitngsConnection2ᚖgithubᚗcomᚋkabeceᚋgqlgenᚑchatroomᚋgraphᚋmodelᚐLisitngsConnection(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Srp_lisitngsConnection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchResultListings_lisitngsConnection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Srp",
+		Object:     "SearchResultListings",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -1159,7 +1235,7 @@ func (ec *executionContext) fieldContext_Srp_lisitngsConnection(ctx context.Cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Srp_lisitngsConnection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_SearchResultListings_lisitngsConnection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -3138,7 +3214,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "getSrp":
+		case "getSearchResultListings":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3147,7 +3223,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_getSrp(ctx, field)
+				res = ec._Query_getSearchResultListings(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3191,24 +3267,32 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var srpImplementors = []string{"Srp"}
+var searchResultListingsImplementors = []string{"SearchResultListings"}
 
-func (ec *executionContext) _Srp(ctx context.Context, sel ast.SelectionSet, obj *model.Srp) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, srpImplementors)
+func (ec *executionContext) _SearchResultListings(ctx context.Context, sel ast.SelectionSet, obj *model.SearchResultListings) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchResultListingsImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Srp")
+			out.Values[i] = graphql.MarshalString("SearchResultListings")
 		case "id":
-			out.Values[i] = ec._Srp_id(ctx, field, obj)
+			out.Values[i] = ec._SearchResultListings_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "name":
-			out.Values[i] = ec._Srp_name(ctx, field, obj)
+		case "filters":
+			out.Values[i] = ec._SearchResultListings_filters(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "sort":
+			out.Values[i] = ec._SearchResultListings_sort(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "lisitngsConnection":
 			field := field
 
@@ -3218,7 +3302,7 @@ func (ec *executionContext) _Srp(ctx context.Context, sel ast.SelectionSet, obj 
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Srp_lisitngsConnection(ctx, field, obj)
+				res = ec._SearchResultListings_lisitngsConnection(ctx, field, obj)
 				return res
 			}
 
@@ -3685,18 +3769,18 @@ func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋkabeceᚋgqlgen�
 	return ec._PageInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSrp2githubᚗcomᚋkabeceᚋgqlgenᚑchatroomᚋgraphᚋmodelᚐSrp(ctx context.Context, sel ast.SelectionSet, v model.Srp) graphql.Marshaler {
-	return ec._Srp(ctx, sel, &v)
+func (ec *executionContext) marshalNSearchResultListings2githubᚗcomᚋkabeceᚋgqlgenᚑchatroomᚋgraphᚋmodelᚐSearchResultListings(ctx context.Context, sel ast.SelectionSet, v model.SearchResultListings) graphql.Marshaler {
+	return ec._SearchResultListings(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSrp2ᚖgithubᚗcomᚋkabeceᚋgqlgenᚑchatroomᚋgraphᚋmodelᚐSrp(ctx context.Context, sel ast.SelectionSet, v *model.Srp) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchResultListings2ᚖgithubᚗcomᚋkabeceᚋgqlgenᚑchatroomᚋgraphᚋmodelᚐSearchResultListings(ctx context.Context, sel ast.SelectionSet, v *model.SearchResultListings) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._Srp(ctx, sel, v)
+	return ec._SearchResultListings(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -4037,16 +4121,6 @@ func (ec *executionContext) marshalOListing2ᚖgithubᚗcomᚋkabeceᚋgqlgenᚑ
 		return graphql.Null
 	}
 	return ec._Listing(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
-	return res
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

@@ -14,16 +14,18 @@ import (
 	"github.com/kabece/gqlgen-chatroom/graph/model"
 )
 
-// GetSrp is the resolver for the getSrp field.
-func (r *queryResolver) GetSrp(ctx context.Context, id string) (*model.Srp, error) {
-	if t, ok := r.Srps[id]; ok {
+// GetSearchResultListings is the resolver for the getSearchResultListings field.
+func (r *queryResolver) GetSearchResultListings(ctx context.Context, id string, filters *string, sort *string) (*model.SearchResultListings, error) {
+	if t, ok := r.Results[id]; ok {
+		t.Filters = *filters
+		t.Sort = *sort
 		return &t, nil
 	}
-	return nil, errors.New("Srp not found")
+	return nil, errors.New("results not found")
 }
 
 // LisitngsConnection is the resolver for the lisitngsConnection field.
-func (r *srpResolver) LisitngsConnection(ctx context.Context, obj *model.Srp, first *int, after *string) (*model.LisitngsConnection, error) {
+func (r *searchResultListingsResolver) LisitngsConnection(ctx context.Context, obj *model.SearchResultListings, first *int, after *string) (*model.LisitngsConnection, error) {
 	// The cursor is base64 encoded by convention, so we need to decode it first
 	var decodedCursor string
 	if after != nil {
@@ -45,7 +47,7 @@ func (r *srpResolver) LisitngsConnection(ctx context.Context, obj *model.Srp, fi
 	}
 	hasNextPage := false
 
-	// Iterating over the mocked messages to find the current page
+	// Iterating over the mocked listings to find the current page
 	// In real world use-case you should fetch only the required part of data from the database
 	for i, v := range r.Listings[obj.ID] {
 		node := v
@@ -76,19 +78,21 @@ func (r *srpResolver) LisitngsConnection(ctx context.Context, obj *model.Srp, fi
 
 	fmt.Printf("LisitngsConnection | first: %v, pageInfo: %+v \n", *first, pageInfo)
 
-	mc := model.LisitngsConnection{
+	lc := model.LisitngsConnection{
 		Edges:    edges[:count],
 		PageInfo: &pageInfo,
 	}
 
-	return &mc, nil
+	return &lc, nil
 }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-// Srp returns generated.SrpResolver implementation.
-func (r *Resolver) Srp() generated.SrpResolver { return &srpResolver{r} }
+// SearchResultListings returns generated.SearchResultListingsResolver implementation.
+func (r *Resolver) SearchResultListings() generated.SearchResultListingsResolver {
+	return &searchResultListingsResolver{r}
+}
 
 type queryResolver struct{ *Resolver }
-type srpResolver struct{ *Resolver }
+type searchResultListingsResolver struct{ *Resolver }

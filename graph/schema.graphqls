@@ -19,12 +19,13 @@ type PageInfo {
   hasNextPage: Boolean
 }
 
-type Srp {
+type SearchResultListings {
   id: ID!
-  name: String
+  filters: String!
+  sort: String!
   lisitngsConnection(first: Int = 20, after: ID): LisitngsConnection
 }
 
 type Query {
-  getSrp(id: ID!): Srp!
+  getSearchResultListings(id: ID!, filters: String, sort: String): SearchResultListings!
 }
